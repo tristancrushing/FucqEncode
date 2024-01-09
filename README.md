@@ -1,53 +1,66 @@
-# FucqEncode PHP Class
+# FucqEncode
 
 ## Overview
-FucqEncode is a PHP class that implements a unique string encoding and decoding algorithm, named 'Frequently Used Character Quantification' (Fucq). It provides a multi-layered `bin2hex` encoding approach with a novel method to quantify character repetitions. The class is designed for educational purposes, showcasing advanced encoding techniques in PHP.
+`FucqEncode` is a PHP class developed by Tristan McGowan (tristan@ipspy.net), which implements the advanced 'Fucq' encoding and decoding algorithm. Designed specifically for JSON data, this algorithm, standing for "Frequently Used Character Quantification", provides an efficient method for data compression and encoding. It is uniquely paired with PHP's native `gzencode` and `gzdecode` functions for optimal compression results.
+
+**Scalable Compression:** The `FucqEncode` algorithm becomes more efficient with larger data sets, achieving a higher compression ratio. This characteristic of scalable compression indicates that the algorithm's efficiency improves as the size of the data increases. It is particularly valuable in applications where data sizes vary significantly, demonstrating the algorithm's capability to handle large data effectively.
 
 ## Features
-- **Multi-Layered Encoding**: Implements multiple layers of `bin2hex` encoding, stopping when the encoded string contains only 7 unique digits.
-- **Custom Encoding Algorithm**: Includes a custom encoding algorithm (`fucqEncodeAlgo`) that transforms encoded strings into a sequence based on consecutive character counts.
-- **Decoding Functionality**: Provides methods to reverse the encoding process, with limitations in reconstructing the original string without additional information.
+- **Advanced JSON Compression:** Tailor-made for compressing JSON data.
+- **Integration with Gzencode/Gzdecode:** Utilizes PHP's native compression functions for maximal efficiency.
+- **Scalable Compression:** Enhanced effectiveness with increasing data size.
+- **GET Request Friendly:** Encoded data is suitable for transmission via GET requests.
 
 ## Installation
-Simply download the `FucqEncode.php` file and include it in your PHP project:
-```php
+Include `FucqEncode.php` in your PHP project:
+
+\```php
 require_once 'path/to/FucqEncode.php';
-```
+\```
 
 ## Usage
-Instantiate the `FucqEncode` class and use its methods to encode and decode strings:
-```php
+To use `FucqEncode` for encoding and decoding JSON data, follow this example:
+
+\```php
 $fucqEncoder = new FucqEncode();
 
-// Encoding a string
-$encoded = $fucqEncoder->encode('Your String Here');
+// Example JSON string
+$jsonString = '{"name": "John Doe", "age": 30}';
 
-// Applying the fucqEncode algorithm
-$fucqEncoded = $fucqEncoder->fucqEncodeAlgo($encoded);
+// Encoding the JSON string
+$encodedString = $fucqEncoder->fucqEncodeAlgo($jsonString);
 
-// Decoding the fucqEncoded string (this step requires the original character information or an appropriate logic)
-$fucqDecoded = $fucqEncoder->fucqDecodeAlgo($fucqEncoded);
+// Decoding the encoded string
+$decodedString = $fucqEncoder->fucqDecodeAlgo($encodedString);
 
-// Decoding the string from hex
-$decoded = $fucqEncoder->decode($fucqDecoded);
-```
+// Verify the encoding and decoding
+if ($jsonString === $decodedString) {
+    echo "Encoding and Decoding successful!";
+} else {
+    echo "Error in the process.";
+}
+\```
 
-## Methods
-- `encode(string $input): string`: Encodes a given string using multi-layered `bin2hex`.
-- `decode(string $input): string`: Decodes the given string, reversing the `bin2hex` encoding.
-- `fucqEncodeAlgo(string $encodedString): string`: Applies the Fucq encoding algorithm to the encoded string.
-- `fucqDecodeAlgo(string $encodedString): string`: Decodes a string processed by `fucqEncodeAlgo`.
+## Test Results
+The algorithm shows promising compression results in initial tests:
 
-## Contributing
-Contributions, issues, and feature requests are welcome. Feel free to check [issues page](link-to-issues-page) if you want to contribute.
+### Test 1
+- Input Length: 85731
+- FucqEncoded Length: 52620, Compression Ratio: 1.629
+- Status: COMPRESSED
 
-## License
-Distributed under the MIT License. See `LICENSE` for more information.
+### Test 2
+- Input Length: 85851
+- FucqEncoded Length: 52740, Compression Ratio: 1.628
+- Status: COMPRESSED
+
+### Test 3
+- Input Length: 85953
+- FucqEncoded Length: 52622, Compression Ratio: 1.633
+- Status: COMPRESSED
 
 ## Author
-Tristan McGowan
+`FucqEncode` was developed by Tristan McGowan (tristan@ipspy.net). Contributions are welcome to further enhance its capabilities.
 
-## Contact
-Tristan McGowan - [tristan@ipspy.net](mailto:tristan@ipspy.net)
-
-Project Link: [https://github.com/tristancrusing/FucqEncode](https://github.com/tristancrusing/FucqEncode)
+## License
+`FucqEncode` is released under the [MIT License](https://opensource.org/licenses/MIT).
