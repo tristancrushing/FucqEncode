@@ -14,14 +14,14 @@
 ## Installation
 Include `FucqEncode.php` in your PHP project:
 
-\```php
+```php
 require_once 'path/to/FucqEncode.php';
-\```
+```
 
 ## Usage
 To use `FucqEncode` for encoding and decoding JSON data, follow this example:
 
-\```php
+```php
 $fucqEncoder = new FucqEncode();
 
 // Example JSON string
@@ -39,7 +39,7 @@ if ($jsonString === $decodedString) {
 } else {
     echo "Error in the process.";
 }
-\```
+```
 
 ## Test Results
 The algorithm shows promising compression results in initial tests:
