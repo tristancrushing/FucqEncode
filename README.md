@@ -10,13 +10,13 @@ FucqEncode is a PHP class that implements a unique string encoding and decoding 
 
 ## Installation
 Simply download the `FucqEncode.php` file and include it in your PHP project:
-\`\`\`php
+```php
 require_once 'path/to/FucqEncode.php';
-\`\`\`
+```
 
 ## Usage
 Instantiate the `FucqEncode` class and use its methods to encode and decode strings:
-\`\`\`php
+```php
 $fucqEncoder = new FucqEncode();
 
 // Encoding a string
@@ -27,7 +27,7 @@ $fucqEncoded = $fucqEncoder->fucqEncodeAlgo($encoded);
 
 // Decoding the string
 $decoded = $fucqEncoder->decode($fucqEncoded);
-\`\`\`
+```
 
 ## Methods
 - `encode(string $input): string`: Encodes a given string using multi-layered `bin2hex`.
