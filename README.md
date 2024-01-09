@@ -25,8 +25,11 @@ $encoded = $fucqEncoder->encode('Your String Here');
 // Applying the fucqEncode algorithm
 $fucqEncoded = $fucqEncoder->fucqEncodeAlgo($encoded);
 
-// Decoding the string
-$decoded = $fucqEncoder->decode($fucqEncoded);
+// Decoding the fucqEncoded string (this step requires the original character information or an appropriate logic)
+$fucqDecoded = $fucqEncoder->fucqDecodeAlgo($fucqEncoded);
+
+// Decoding the string from hex
+$decoded = $fucqEncoder->decode($fucqDecoded);
 ```
 
 ## Methods
