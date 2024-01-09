@@ -1,5 +1,7 @@
 # FucqEncode
 
+![FUCQ ENCODE Logo](FUCQ-ENCODE-LOGO.gif)
+
 ## Overview
 `FucqEncode` is a PHP class developed by Tristan McGowan (tristan@ipspy.net), which implements the advanced 'Fucq' encoding and decoding algorithm. Designed specifically for JSON data, this algorithm, standing for "Frequently Used Character Quantification", provides an efficient method for data compression and encoding. It is uniquely paired with PHP's native `gzencode` and `gzdecode` functions for optimal compression results.
 
