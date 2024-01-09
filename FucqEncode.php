@@ -3,24 +3,25 @@ ini_set('memory_limit', '8192M'); // For Testing Purposes, will lock down memeor
 
 /**
  * Class FucqEncode
- * Implements the 'Fucq' encoding and decoding algorithm.
- * 'Fucq' stands for "Frequently Used Character Quantification" encoding.
+ * Implements the 'Fucq' encoding and decoding algorithm, specifically optimized for JSON data.
+ * 'Fucq' stands for "Frequently Used Character Quantification" encoding. 
  * This class offers methods for multi-layered bin2hex encoding with a unique stopping condition,
- * a custom algorithm for transforming encoded strings based on character repetition,
- * and methods for decoding these transformations.
- *
- * The encode method applies bin2hex multiple times and stops if the encoded string contains only 7 unique digits.
- * The decode method reverses this process but requires additional information about the character sequence
- * used in the fucqEncodeAlgo method for accurate reconstruction of the original string.
+ * and a custom algorithm designed to make JSON data easily compressible and encodable, facilitating its transmission via GET requests.
+ * 
+ * The algorithm exhibits scalable compression, where its efficiency improves as the size of the data increases.
+ * This characteristic makes it particularly effective for applications dealing with varying and large sizes of data.
+ * 
  */
 class FucqEncode {
     private int $maxLayers;
 
     /**
-     * Constructor for the FucqEncode class.
-     * Initializes the object with the maximum layers of encoding.
+     * FucqEncode Constructor.
+     * Initializes the FucqEncode object with specified maximum layers of encoding.
+     * The class is optimized for encoding and decoding complex JSON structures,
+     * making them suitable for efficient data transmission, such as via GET requests.
      *
-     * @param int $maxLayers The maximum layers of encoding to apply.
+     * @param int $maxLayers The maximum layers of encoding to apply. Defaults to 1.
      */
     public function __construct(int $maxLayers = 1) {
         $this->maxLayers = $maxLayers;
@@ -58,7 +59,10 @@ class FucqEncode {
 
     /**
      * Encodes a given string using multiple layers of bin2hex encoding.
-     * Stops the encoding process once the string contains only 7 unique digits.
+     * This method is particularly effective for compressing JSON data.
+     * It repetitively applies bin2hex encoding and stops when the encoded string
+     * hits the $maxLayers ceiling, set to 1 by default, increasing this will further 
+     * obsurificate the encoded string, but may decrase the compression efficiency
      *
      * @param string $input The input string to encode.
      * @return string The encoded string.
@@ -95,7 +99,15 @@ class FucqEncode {
         return $decoded;
     }
 
-     // FucqEncodeAlgo Step 1
+    /**
+    * Encodes a given string by creating a sequence of counts of consecutive identical characters.
+    * This is the first step in the Fucq encoding process, where the method transforms
+    * the string into a series of character repetitions, laying the foundation for efficient compression,
+    * especially beneficial for patterns found in JSON data.
+    *
+    * @param string $encodedString The string to be transformed.
+    * @return array An array representing the sequence of character counts.
+    */
     private function encodeStep1(string $encodedString): array {
         $result = [];
         $len = strlen($encodedString);
@@ -118,7 +130,14 @@ class FucqEncode {
         return $result;
     }
 
-    // FucqEncodeAlgo Step 2
+    /**
+    * Transforms an array of character counts into a string using a custom mapping logic.
+    * This step maps unique elements of the transformed string to a set of alphabet characters,
+    * creating a compact representation that further aids in compressing JSON data.
+    *
+    * @param array $fqEncWorkOgArray Array of original character counts.
+    * @return array An array containing the transformed string and the character map used for the transformation.
+    */
     private function encodeStep2(array $fqEncWorkOgArray): array {
         $fqCharMap = [];
         $fqEncWorkOgArrayUnique = array_unique($fqEncWorkOgArray);
@@ -140,7 +159,14 @@ class FucqEncode {
         return ['string' => $fqEncString, 'map' => $fqCharMap];
     }
     
-    // FucqEncodeAlgo Step 3
+    /**
+    * Finalizes the Fucq encoding process by compressing and encoding the character sequence.
+    * This step applies gzencode and bin2hex to the transformed string, along with the character map,
+    * producing a final string optimized for transmission and storage, particularly effective for JSON data.
+    *
+    * @param array $fqEncStringAndMap Array containing the transformed string and character map.
+    * @return string The final compressed and encoded string ready for transmission.
+    */
     private function encodeStep3(array $fqEncStringAndMap): string {
         $fqEncCharArray = explode(';', $fqEncStringAndMap['string']);
         $fqEncCharString = implode('', $fqEncCharArray);
@@ -148,7 +174,14 @@ class FucqEncode {
         return bin2hex(gzencode($fqEncCharString. ';' . implode('/',$fqEncStringAndMap['map']),9));
     }
     
-    // Main fucqEncodeAlgo method
+    /**
+    * Main method to apply the Fucq encoding algorithm.
+    * It orchestrates the process by sequentially calling the encoding steps, 
+    * ensuring efficient compression and encoding of JSON data.
+    *
+    * @param string $encodedString The string to be encoded, typically a JSON structure.
+    * @return string The encoded string, or an error message if the process fails.
+    */
     public function fucqEncodeAlgo(string $encodedString): string {
         $encodedString = $this->encode($encodedString);
         $step1Result = $this->encodeStep1($encodedString);
@@ -160,7 +193,15 @@ class FucqEncode {
     
         return $this->encodeStep3($step2Result);
     }
-    
+
+    /**
+    * First step in decoding a Fucq encoded string.
+    * It decodes and decompresses the encoded data and character map, 
+    * preparing them for the subsequent steps to reconstruct the original string.
+    *
+    * @param string $encodedString The Fucq encoded string to decode.
+    * @return array An array containing the decoded data and character map.
+    */
     public function fucqDecodeAlgoStep1(string $encodedString): array {
         $encodedString = gzdecode(hex2bin($encodedString));
         
@@ -182,7 +223,15 @@ class FucqEncode {
     
         return ["decodedData" => $decodedData, "decodedCharMap" => $decodedCharMap];
     }
-    
+
+    /**
+    * Second step in decoding a Fucq encoded string.
+    * It reverses the mapping of unique elements to alphabet characters, 
+    * reconstructing the transformed string to its original state before final decompression.
+    *
+    * @param array $decodedResults Array containing the decoded data and character map from the first step.
+    * @return string The reconstructed string, ready for final decoding.
+    */
     public function fucqDecodeAlgoStep2(array $decodedResults): string {
         if (isset($decodedResults['error'])) {
             return $decodedResults['error'];
@@ -205,6 +254,15 @@ class FucqEncode {
         return $decodedData;
     }
 
+    /**
+    * Final step in decoding a Fucq encoded string.
+    * It takes the reconstructed string from the previous step and replicates the characters 
+    * based on their counts, effectively restoring the original string, 
+    * ensuring the integrity of the original JSON data.
+    *
+    * @param string $decodedData The reconstructed string from the second step.
+    * @return string The original string, fully decoded.
+    */
     public function fucqDecodeAlgoStep3(string $decodedData): string {
         // Split the string into segments
         $segments = explode(';', $decodedData);
@@ -219,15 +277,14 @@ class FucqEncode {
         return $originalString;
     }
 
-
     /**
-     * Decodes a string processed by fucqEncodeAlgo.
-     * This method requires knowledge of the original characters or a way to infer them.
-     * In its current state, it cannot fully reconstruct the original string without additional information.
-     *
-     * @param string $encodedString The fucqEncoded string to decode.
-     * @return string The decoded string.
-     */
+    * Decodes a string processed by fucqEncodeAlgo.
+    * Orchestrates the decoding process by calling the three decoding steps in sequence,
+    * accurately reconstructing the original string, particularly effective for JSON structures.
+    *
+    * @param string $encodedString The fucqEncoded string to decode.
+    * @return string The decoded string, or an error message if the process fails.
+    */
     public function fucqDecodeAlgo(string $encodedString): string {
         // Step 1: Decode and decompress the encoded data and character map
         $step1Results = $this->fucqDecodeAlgoStep1($encodedString);
@@ -244,8 +301,6 @@ class FucqEncode {
         // Step 3: Reconstruct the original string from the decoded data
         return $this->decode($this->fucqDecodeAlgoStep3($decodedData));
     }
-
-
 
     // Additional methods and logic can be added here
 }
