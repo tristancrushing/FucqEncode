@@ -72,11 +72,11 @@ class TestFucqEncode {
         echo '<div class="mb-3"><strong>Input String:</strong><br/>';
         echo '<textarea class="form-control" style="height: 150px;" readonly>' . htmlspecialchars($results['inputString']) . '</textarea></div>';
     
-        echo '<div class="mb-3"><strong>Input Length:</strong> ' . $results['inputLength'] . '</div>';
-    
         // FucqEncoded String
         echo '<div class="mb-3"><strong>FucqEncoded String:</strong><br/>';
         echo '<textarea class="form-control" style="height: 150px;" readonly>' . htmlspecialchars($results['fucqEncodedString']) . '</textarea></div>';
+        
+        echo '<div class="mb-3"><strong>Input Length:</strong> ' . $results['inputLength'] . '</div>';
     
         // FucqEncoded Length and Ratio
         echo '<div class="mb-3"><strong>FucqEncoded Length:</strong> ' . $results['fucqEncodedLength'];
