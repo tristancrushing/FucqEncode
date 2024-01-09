@@ -1,4 +1,5 @@
 <?php
+ini_set('memory_limit', '8192M'); // For Testing Purposes, will lock down memeory requirments when I finalize algo.
 
 /**
  * Class FucqEncode
@@ -21,25 +22,38 @@ class FucqEncode {
      *
      * @param int $maxLayers The maximum layers of encoding to apply.
      */
-    public function __construct(int $maxLayers = 7) {
+    public function __construct(int $maxLayers = 1) {
         $this->maxLayers = $maxLayers;
     }
 
     public function __run_example_usage() {
       // Usage example
       $fucqEncoder = new FucqEncode();
-
-      // Encoding a string
-      $encoded = $fucqEncoder->encode('Your String Here');
+      
+      $stringToEncode = file_get_contents('https://random-data-api.com/api/v2/users?size=10');
+      echo "<pre>";
+      echo "<h3>\$stringToEncode</h3>";
+      print_r($stringToEncode);
+      echo "</pre>";
       
       // Applying the fucqEncode algorithm
-      $fucqEncoded = $fucqEncoder->fucqEncodeAlgo($encoded);
+      $fucqEncoded = $fucqEncoder->fucqEncodeAlgo($stringToEncode);
+      echo "<pre>";
+      echo "<h3>\$fucqEncoded</h3>";
+      print_r($fucqEncoded);
+      echo "</pre>";
       
       // Decoding the fucqEncoded string (this step requires the original character information or an appropriate logic)
       $fucqDecoded = $fucqEncoder->fucqDecodeAlgo($fucqEncoded);
+      echo "<pre>";
+      echo "<h3>\$fucqDecoded</h3>";
+      print_r($fucqDecoded);
+      echo "</pre>";
       
-      // Decoding the string from hex
-      $decoded = $fucqEncoder->decode($fucqDecoded);
+      if( $stringToEncode === $fucqDecoded )
+      {
+          echo "<h1 style=\"color:green;\">TEST PASSED!</h1>";
+      }
     }
 
     /**
@@ -54,24 +68,9 @@ class FucqEncode {
 
         for ($i = 0; $i < $this->maxLayers; $i++) {
             $encoded = bin2hex($encoded);
-
-            if ($this->hasSevenUniqueDigits($encoded)) {
-                break; // Stop encoding if the string has only 7 unique digits
-            }
         }
 
         return $encoded;
-    }
-
-    /**
-     * Checks if the given string contains only 7 unique digits.
-     *
-     * @param string $str The string to check.
-     * @return bool Returns true if the string contains exactly 7 unique digits, false otherwise.
-     */
-    private function hasSevenUniqueDigits(string $str): bool {
-        $uniqueChars = count(array_unique(str_split($str)));
-        return $uniqueChars === 7;
     }
 
     /**
@@ -96,14 +95,8 @@ class FucqEncode {
         return $decoded;
     }
 
-    /**
-     * Applies the custom fucqEncode algorithm to an encoded string.
-     * Converts the string into a sequence of counts of consecutive identical characters.
-     *
-     * @param string $encodedString The encoded string to process.
-     * @return string The fucqEncoded string.
-     */
-    public function fucqEncodeAlgo(string $encodedString): string {
+     // FucqEncodeAlgo Step 1
+    private function encodeStep1(string $encodedString): array {
         $result = [];
         $len = strlen($encodedString);
 
@@ -112,13 +105,120 @@ class FucqEncode {
             while ($i < $len - 1 && $encodedString[$i] === $encodedString[$i + 1]) {
                 $count++;
                 $i++;
+                if ($encodedString[$i] !== $encodedString[$i + 1]) {
+                    $result[] = $count . ',' . $encodedString[$i];
+                }
             }
 
-            $result[] = $count;
+            if ($count === 1) {
+                $result[] = $count . ',' . $encodedString[$i];
+            }
         }
 
-        return implode(';', $result);
+        return $result;
     }
+
+    // FucqEncodeAlgo Step 2
+    private function encodeStep2(array $fqEncWorkOgArray): array {
+        $fqCharMap = [];
+        $fqEncWorkOgArrayUnique = array_unique($fqEncWorkOgArray);
+        $fqEncString = implode(';', $fqEncWorkOgArray);
+    
+        if (count($fqEncWorkOgArrayUnique) > 52) {
+            return ["error" => "Not enough unique elements to map to each alphabet character"];
+        }
+    
+        $alphabet = array_merge(range('a', 'z'), range('A', 'Z'));
+    
+        foreach ($alphabet as $char) {
+            if ($value = array_shift($fqEncWorkOgArrayUnique)) {
+                $fqCharMap[$char] = $value;
+                $fqEncString = str_replace($value, $char, $fqEncString);
+            }
+        }
+    
+        return ['string' => $fqEncString, 'map' => $fqCharMap];
+    }
+    
+    // FucqEncodeAlgo Step 3
+    private function encodeStep3(array $fqEncStringAndMap): string {
+        $fqEncCharArray = explode(';', $fqEncStringAndMap['string']);
+        $fqEncCharString = implode('', $fqEncCharArray);
+    
+        return bin2hex(gzencode($fqEncCharString. ';' . implode('/',$fqEncStringAndMap['map']),9));
+    }
+    
+    // Main fucqEncodeAlgo method
+    public function fucqEncodeAlgo(string $encodedString): string {
+        $encodedString = $this->encode($encodedString);
+        $step1Result = $this->encodeStep1($encodedString);
+        $step2Result = $this->encodeStep2($step1Result);
+    
+        if (isset($step2Result['error'])) {
+            return $step2Result['error'];  // Return error message if any
+        }
+    
+        return $this->encodeStep3($step2Result);
+    }
+    
+    public function fucqDecodeAlgoStep1(string $encodedString): array {
+        $encodedString = gzdecode(hex2bin($encodedString));
+        
+        // Split the encoded string to get the encoded data and the character map
+        list($encodedData, $encodedCharMap) = explode(';', $encodedString, 2);
+    
+        // Decode and decompress the encoded data
+        $decodedData = $encodedData;
+        if ($decodedData === false) {
+            return ["error" => "Decompression or decoding of data failed"];
+        }
+    
+        // Decode and decompress the character map
+        $decodedCharMap = explode('/',$encodedCharMap);
+        
+        if ($decodedCharMap === false) {
+            return ["error" => "Decompression or decoding of character map failed"];
+        }
+    
+        return ["decodedData" => $decodedData, "decodedCharMap" => $decodedCharMap];
+    }
+    
+    public function fucqDecodeAlgoStep2(array $decodedResults): string {
+        if (isset($decodedResults['error'])) {
+            return $decodedResults['error'];
+        }
+    
+        $decodedData = $decodedResults['decodedData'];
+        $decodedCharMap = $decodedResults['decodedCharMap'];
+        
+        $alphabet = array_merge(range('a', 'z'), range('A', 'Z'));
+    
+        // Reverse the process of mapping unique elements to alphabet characters
+        foreach ($decodedCharMap as $char => $value) {
+            if( !empty($value) )
+            {
+                $decodedData = str_replace($alphabet[$char], $value.';', $decodedData);
+            }
+        }
+        
+        // The result should be a string of concatenated unique elements
+        return $decodedData;
+    }
+
+    public function fucqDecodeAlgoStep3(string $decodedData): string {
+        // Split the string into segments
+        $segments = explode(';', $decodedData);
+        $originalString = '';
+    
+        foreach ($segments as $segment) {
+            list($count, $char) = explode(',', $segment);
+            $count = intval($count);  // Ensure count is an integer
+            $originalString .= str_repeat($char, $count);
+        }
+    
+        return $originalString;
+    }
+
 
     /**
      * Decodes a string processed by fucqEncodeAlgo.
@@ -129,23 +229,23 @@ class FucqEncode {
      * @return string The decoded string.
      */
     public function fucqDecodeAlgo(string $encodedString): string {
-        // Placeholder for character mapping
-        $characters = [...]; // This array should contain the original characters or inferred characters
-
-        $segments = explode(';', $encodedString);
-        $result = '';
-
-        foreach ($segments as $index => $count) {
-            if (isset($characters[$index])) {
-                $result .= str_repeat($characters[$index], (int)$count);
-            } else {
-                // Handle unknown segment or error
-                $result .= ''; // Placeholder action for unknown segments
-            }
+        // Step 1: Decode and decompress the encoded data and character map
+        $step1Results = $this->fucqDecodeAlgoStep1($encodedString);
+        if (isset($step1Results['error'])) {
+            return $step1Results['error'];
         }
-
-        return $result;
+    
+        // Step 2: Reverse the process of mapping unique elements to alphabet characters
+        $decodedData = $this->fucqDecodeAlgoStep2($step1Results);
+        if (is_string($decodedData) && strpos($decodedData, 'error') !== false) {
+            return $decodedData; // Return error message if any
+        }
+    
+        // Step 3: Reconstruct the original string from the decoded data
+        return $this->decode($this->fucqDecodeAlgoStep3($decodedData));
     }
+
+
 
     // Additional methods and logic can be added here
 }
